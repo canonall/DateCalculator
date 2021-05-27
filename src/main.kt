@@ -1,29 +1,40 @@
 import java.util.*
 
 fun main() {
-    val pairNumberOne = PairNumber(2, 4)
-    val pairNumberTwo = PairNumber(-8, 11)
-
-    val pairNumber = pairNumberOne - pairNumberTwo
-
 
     print("Please enter your birthdate in dd.mm.yyyy format: ")
     val userInput: String? = readLine()
 
-    if (!userInput.isNullOrEmpty()) {  //todo check whether two dots
+    //System fails when user enters no value
+    // a value that consist two consecutive dots ".."
+    // a value that starts with "."
+    //a value that ends with "."
+    if (!userInput.isNullOrEmpty() && !userInput.contains("..")
+        && userInput[0] != '.' && userInput[userInput.length - 1] != '.'
+    ) {
 
-        val userDate = userInput.split(".").toTypedArray()
+        //first, convert string array to Int list, then Int array
+        val userDate = userInput.split(".").map { it.toInt() }.toTypedArray()
 
-        val day = userDate[0]
-        val month = userDate[1]
-        val year = userDate[2]
+        //userDate[0]= day
+        //userDate[1]= month
+        //userDate[2]= year
 
-        if (checkDates(day, month, year)) {
-            //TODO getTodaysDate
-            //TODO applyMinus
+
+        //Check if day, month, year correctly separated
+        if(userDate.size != 3){
+            printErrorMessage()
+        }else{
+            if (isDatesValid(userDate)) {
+
+                val todayDate = getTodayDate()
+                calculateDifference(userDate, todayDate)
+
+            } else {
+                printErrorMessage()
+            }
         }
 
-
     } else {
         printErrorMessage()
     }
@@ -31,55 +42,64 @@ fun main() {
 
 }
 
-fun getTodayDate() {
+fun isDatesValid(userDate: Array<Int>): Boolean {
+
+    return userDate[0] in 1..30 && userDate[1] in 1..12 && userDate[2] in 1000..9999
+
+}
+
+fun getTodayDate(): Array<Int> {
     val date = Calendar.getInstance()
-    val year = date.get(Calendar.YEAR)
-    val month = date.get(Calendar.MONTH + 1)      //indexed from 0..11 so add +1
     val day = date.get(Calendar.DAY_OF_MONTH)
+    var month = date.get(Calendar.MONTH)
+    val year = date.get(Calendar.YEAR)
 
+    //month indexed from 0..11 so add +1
+    month += 1
 
+    return arrayOf(day, month, year)
 }
 
-fun checkDates(vararg userDate: String): Boolean {
+fun calculateDifference(userDate: Array<Int>, todayDate: Array<Int>) {
 
-    return if (userDate[0] !in 1..30 || userDate[1] !in 1..12 || userDate[2] !in 1000..9999) {
-        printErrorMessage()
-        false
-    } else {
-        true
+    // if user day is greater than today month
+    // then don't count this month and
+    // add 30 to the today day
+    if (userDate[0] > todayDate[0]) {
+        todayDate[1] = todayDate[1] - 1
+        todayDate[0] = todayDate[0] + 30
     }
 
+    // if user month is greater than today month,
+    // then don't count this year and add
+    // 12 to the today month
+    if (userDate[1] > todayDate[1]) {
+        todayDate[2] = todayDate[2] - 1
+        todayDate[1] = todayDate[1] + 12
+    }
+
+    val todayDatePair = DatePair(todayDate[0], todayDate[1], todayDate[2])
+    val userDatePair = DatePair(userDate[0], userDate[1], userDate[2])
+
+
+    val result = todayDatePair - userDatePair
+
 }
 
-data class PairNumber(val numberOne: Int, val numberTwo: Int) {
-    operator fun minus(pairNumber: PairNumber): PairNumber {
-        val returnPairObject = PairNumber(
-            numberOne - pairNumber.numberOne,
-            numberTwo - pairNumber.numberTwo
+data class DatePair(val day: Int, val month: Int, val year: Int) {
+    operator fun minus(datePair: DatePair): DatePair {
+        val returnPairObject = DatePair(
+            day - datePair.day,
+            month - datePair.month,
+            year - datePair.year
         )
 
-        println("Result = (${returnPairObject.numberOne}, ${returnPairObject.numberTwo})")
+        println("Since your birth ${returnPairObject.day} days, ${returnPairObject.month} months, ${returnPairObject.year} years has passed")
 
         return returnPairObject
     }
 
-
 }
-
-//data class PairNumber(val numberOne: Int, val numberTwo: Int) {
-//    operator fun minus(pairNumber: PairNumber): PairNumber {
-//        val returnPairObject = PairNumber(
-//            numberOne - pairNumber.numberOne,
-//            numberTwo - pairNumber.numberTwo
-//        )
-//
-//        println("Result = (${returnPairObject.numberOne}, ${returnPairObject.numberTwo})")
-//
-//        return returnPairObject
-//    }
-//
-//
-//}
 
 fun printErrorMessage() {
     println("Please enter a valid date")
